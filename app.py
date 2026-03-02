@@ -1,23 +1,11 @@
-"""Simple Streamlit dashboard for viewing pipeline outputs.
-
-This lightweight web app reads the CSV files produced by the ETL pipeline
-(`data/processed/*`) and displays them in tables.  It is intended as a demo
-so stakeholders can "see the output" without needing to query Snowflake.
-
-Run with:
-
-    pip install streamlit pandas
-    streamlit run app.py
-
-This will start a local web server on http://localhost:8501.
-"""
 
 import streamlit as st
 import pandas as pd
 from pathlib import Path
+from typing import Optional
 
 
-def load_csv(name: str) -> pd.DataFrame | None:
+def load_csv(name: str) -> Optional[pd.DataFrame]:
     path = Path("data/processed") / name
     if path.exists():
         return pd.read_csv(path)
