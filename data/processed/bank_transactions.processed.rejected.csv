@@ -1,0 +1,3 @@
+transaction_id,transaction_date,account_id,amount,transaction_type,source_system,reason
+txn_003,2026-02-02,ACCT300,not_a_number,debit,bank,amount not numeric
+txn_001,2026-02-01,ACCT100,100.00,debit,bank,duplicate transaction_id for source

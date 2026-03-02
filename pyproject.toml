@@ -1,0 +1,8 @@
+[build-system]
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"
+
+[tool.poetry]
+name = "enterprise-financial-analytics-engine"
+version = "0.1.0"
+description = "Modular financial ETL pipeline for demos and portfolio"

@@ -1,0 +1,5 @@
+transaction_id,transaction_date,account_id,amount,transaction_type,source_system
+txn_001,2026-02-01,ACCT100,100.00,debit,bank
+txn_002,2026-02-01,ACCT200,200.50,credit,bank
+txn_003,2026-02-02,ACCT300,not_a_number,debit,bank
+txn_001,2026-02-01,ACCT100,100.00,debit,bank

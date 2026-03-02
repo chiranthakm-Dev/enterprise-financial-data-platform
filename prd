@@ -1,0 +1,322 @@
+PRODUCT REQUIREMENTS DOCUMENT
+
+Project: Enterprise Financial Analytics Engine
+
+Type: Resume & GitHub Portfolio Project
+
+Architecture: Modular Financial ETL Pipeline
+
+⸻
+
+1. PROJECT GOAL
+
+Build a modular financial data pipeline that:
+	1.	Ingests structured financial transaction datasets.
+	2.	Validates data quality and business rules.
+	3.	Performs reconciliation between two financial sources.
+	4.	Generates financial aggregates and variance analysis.
+	5.	Produces reporting-ready SQL views.
+	6.	Logs execution and reconciliation metrics.
+
+The system must simulate enterprise-grade financial reporting architecture.
+
+⸻
+
+2. SYSTEM ARCHITECTURE (LOGICAL FLOW)
+
+Pipeline execution order:
+	1.	Ingestion
+	2.	Validation
+	3.	Reconciliation
+	4.	Aggregation
+	5.	Reporting View Creation
+	6.	Logging & Metrics Storage
+
+Each stage must be modular and independently testable.
+
+⸻
+
+3. GLOBAL CONSTRAINTS
+	•	Use Python for orchestration and logic.
+	•	Use Snowflake as data warehouse.
+	•	Use SQL for transformations and reporting views.
+	•	No hardcoded credentials.
+	•	Use environment variables (.env).
+	•	All SQL must be parameterized.
+	•	Follow schema separation:
+	•	raw
+	•	staging
+	•	analytics
+	•	logs
+
+⸻
+
+4. MODULE REQUIREMENTS
+
+⸻
+
+4.1 INGESTION MODULE
+
+Objective
+
+Load structured financial datasets into raw schema.
+
+Inputs
+	•	CSV file: bank_transactions.csv
+	•	CSV file: ledger_transactions.csv
+	•	CSV file (optional): budget_data.csv
+
+Required Fields (Transactions)
+	•	transaction_id
+	•	transaction_date
+	•	account_id
+	•	amount
+	•	transaction_type (debit/credit)
+	•	source_system
+
+Processing Requirements
+	1.	Validate file exists.
+	2.	Validate required columns.
+	3.	Add ingestion_timestamp.
+	4.	Insert into raw.raw_transactions table.
+	5.	Log:
+	•	record_count
+	•	ingestion_time
+	•	file_name
+
+Output Tables
+
+raw.raw_transactions
+
+Failure Handling
+	•	If schema mismatch → stop ingestion.
+	•	Log error in logs.etl_run_logs.
+
+⸻
+
+4.2 VALIDATION MODULE
+
+Objective
+
+Ensure financial data integrity before reconciliation.
+
+Validation Rules
+	1.	No null values in:
+	•	transaction_id
+	•	amount
+	•	transaction_date
+	2.	transaction_id must be unique per source.
+	3.	amount must be numeric.
+	4.	transaction_type must be debit or credit.
+	5.	transaction_date must be valid date format.
+	6.	Debit/Credit balance check (optional simulation).
+
+Processing Steps
+	1.	Read from raw.raw_transactions.
+	2.	Apply validation rules.
+	3.	Split records into:
+	•	valid_records
+	•	rejected_records
+	4.	Insert valid records into staging.validated_transactions.
+	5.	Insert rejected records into staging.rejected_records.
+	6.	Log validation summary.
+
+Output Tables
+
+staging.validated_transactions
+staging.rejected_records
+
+⸻
+
+4.3 RECONCILIATION MODULE
+
+Objective
+
+Match transactions between bank and ledger sources.
+
+Matching Types
+	1.	Exact Match:
+	•	transaction_id
+	•	amount
+	•	transaction_date
+	2.	Tolerance-Based Match:
+	•	amount difference ≤ configurable threshold
+
+Configurable Parameter
+
+tolerance_amount (default = 5.00)
+
+Processing Steps
+	1.	Separate validated records by source_system.
+	2.	Perform exact match.
+	3.	Remove matched rows from pool.
+	4.	Perform tolerance-based match.
+	5.	Identify unmatched records from both sources.
+	6.	Compute reconciliation metrics:
+	•	total_records
+	•	matched_count
+	•	unmatched_count
+	•	match_rate_percentage
+
+Output Tables
+
+analytics.matched_transactions
+analytics.unmatched_bank
+analytics.unmatched_ledger
+analytics.reconciliation_summary
+
+⸻
+
+4.4 AGGREGATION MODULE
+
+Objective
+
+Generate financial reporting aggregates.
+
+Aggregation Types
+	1.	Daily total amount per account.
+	2.	Monthly total amount per account.
+	3.	Debit vs Credit totals.
+	4.	Account-level financial summary.
+
+Variance Calculations
+
+If budget_data available:
+	1.	actual_amount
+	2.	budget_amount
+	3.	variance_amount = actual - budget
+	4.	variance_percentage
+
+Output Tables
+
+analytics.daily_summary
+analytics.monthly_summary
+analytics.variance_analysis
+
+⸻
+
+4.5 REPORTING MODULE
+
+Objective
+
+Create reporting-ready SQL views.
+
+Required Views
+
+analytics.v_financial_summary
+analytics.v_reconciliation_summary
+analytics.v_variance_summary
+
+Views must:
+	•	Aggregate relevant fields
+	•	Be query-ready
+	•	Not expose raw schema
+
+⸻
+
+4.6 LOGGING & MONITORING MODULE
+
+Objective
+
+Track pipeline execution and governance.
+
+For Each Run:
+
+Generate:
+	•	run_id (UUID)
+	•	start_time
+	•	end_time
+	•	total_ingested
+	•	total_validated
+	•	total_matched
+	•	match_rate
+	•	status (SUCCESS/FAILED)
+
+Insert into:
+
+logs.etl_run_logs
+
+Security Requirement
+
+Logs must not expose credentials or sensitive values.
+
+⸻
+
+5. DATABASE SCHEMA STRUCTURE
+
+Create Schemas:
+
+raw
+staging
+analytics
+logs
+
+Tables must include:
+	•	primary keys
+	•	timestamps
+	•	source identifiers
+
+⸻
+
+6. SECURITY REQUIREMENTS
+	1.	All credentials stored in .env.
+	2.	SQL queries must use parameter binding.
+	3.	Enforce Snowflake role-based access:
+	•	etl_service_role
+	•	analyst_role
+	•	read_only_role
+	4.	Raw schema must not be accessible to analyst role.
+	5.	Prevent duplicate ingestion.
+	6.	No secrets committed to Git.
+
+⸻
+
+7. TESTING REQUIREMENTS
+
+Unit Tests
+	•	Validation rule tests.
+	•	Matching logic tests.
+	•	Variance calculation tests.
+
+Data Integrity Tests
+	•	Row counts match expected.
+	•	No duplicate transaction_id in staging.
+	•	Match rate calculated correctly.
+
+⸻
+
+8. PERFORMANCE REQUIREMENTS
+	•	Must handle 100,000 records per batch.
+	•	Execution time < 5 minutes on sample dataset.
+	•	Reconciliation logic must be efficient (avoid nested loops in Python; use SQL joins where possible).
+
+⸻
+
+9. SUCCESS CRITERIA
+
+Project is complete when:
+	•	Full pipeline runs end-to-end.
+	•	All modules are independent.
+	•	Reconciliation metrics are generated.
+	•	Reporting views are queryable.
+	•	Logs are stored per execution.
+	•	README clearly explains architecture.
+	•	Code is modular and structured.
+
+⸻
+
+10. DELIVERABLES
+	•	Modular Python codebase
+	•	SQL schema creation scripts
+	•	Sample dataset
+	•	Unit test suite
+	•	Professional README
+	•	Clean GitHub structure
+
+⸻
+
+11. FUTURE EXTENSIONS (Optional)
+	•	Add anomaly detection.
+	•	Add Streamlit dashboard.
+	•	Add CI/CD pipeline.
+	•	Add automated scheduling.

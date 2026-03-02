@@ -1,0 +1,69 @@
+ech Stack
+
+Programming Language
+
+Python 3.x
+Primary language used for ETL orchestration, reconciliation logic, validation engine, aggregation modeling, and monitoring framework.
+
+Key Libraries:
+	•	pandas – data transformation and financial modeling
+	•	sqlalchemy – secure database interaction layer
+	•	snowflake-connector-python – Snowflake connectivity
+	•	python-dotenv – environment configuration management
+	•	logging – structured execution logging
+	•	pytest – unit testing framework
+
+⸻
+
+Data Warehouse
+
+Snowflake (Free Trial Credits)
+Cloud-based enterprise data warehouse used for structured financial data storage, reconciliation outputs, aggregation models, and governed reporting views.
+
+Features leveraged:
+	•	Role-Based Access Control (RBAC)
+	•	Encrypted SSL connections
+	•	Schema separation (raw, staging, analytics, logs)
+
+⸻
+
+Query Language
+
+SQL
+Used for data transformation, aggregation models, variance calculations, and reporting views.
+
+⸻
+
+ETL Framework
+
+Custom Modular Python-Based ETL Orchestration
+Layered architecture including ingestion, validation, reconciliation, aggregation, and reporting components.
+
+⸻
+
+Data Governance & Profiling
+
+Dataiku Community Edition
+Used for data profiling, validation flow visualization, and governance demonstration.
+
+⸻
+
+Visualization Layer (Optional)
+
+Streamlit
+Interactive dashboard for reconciliation summaries, financial KPIs, and variance trends.
+
+⸻
+
+Version Control & DevOps
+
+GitHub
+	•	Structured repository management
+	•	Secure environment variable handling
+	•	Integrated testing workflow
+
+⸻
+
+Development Environment
+	•	Virtual Environment (venv)
+	•	Docker (optional for local containerization)

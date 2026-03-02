@@ -1,0 +1,4 @@
+transaction_id,transaction_date,account_id,amount,transaction_type,source_system
+txn_001,2026-02-01,ACCT100,100.00,debit,ledger
+txn_004,2026-02-03,ACCT400,300.00,credit,ledger
+txn_005,2026-02-04,ACCT500,500.00,debit,ledger
