@@ -7,6 +7,7 @@ import pytest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 from src.validation.validate import validate_file, ValidationError
+from src.config.config import get_config
 
 
 def create_csv(path, headers, rows):
@@ -75,3 +76,18 @@ def test_validate_fallback_no_creds(tmp_path, monkeypatch):
     assert res["total"] == 1
     assert res["valid"] == 1
     assert (outdir / "data.validated.csv").exists()
+
+
+def test_config_dynamic(monkeypatch):
+    # verify that get_config respects changes to environment variables
+    monkeypatch.setenv("SNOWFLAKE_ACCOUNT", "acct1")
+    monkeypatch.setenv("SNOWFLAKE_USER", "user1")
+    cfg1 = get_config()
+    assert cfg1.snowflake_account == "acct1"
+    assert cfg1.snowflake_user == "user1"
+
+    monkeypatch.setenv("SNOWFLAKE_ACCOUNT", "acct2")
+    cfg2 = get_config()
+    assert cfg2.snowflake_account == "acct2"
+    # other fields should update similarly
+    assert cfg2.snowflake_user == "user1"

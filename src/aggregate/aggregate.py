@@ -15,7 +15,7 @@ except Exception:
     PANDAS_AVAILABLE = False
 
 from src.config.config import has_snowflake_credentials
-from src.db.connection import execute_many
+from src.db.connection import execute_many, execute_query
 
 LOG = logging.getLogger(__name__)
 

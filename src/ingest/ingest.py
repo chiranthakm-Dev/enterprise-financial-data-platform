@@ -102,19 +102,25 @@ def ingest_file(
         LOG.warning("Snowflake credentials not found; switching to dry-run mode")
         dry_run = True
 
+    # regardless of whether we are writing to Snowflake, we still produce a
+    # processed CSV in ``out_dir`` when requested.  This makes downstream
+    # stages (validation, reconciliation) simpler to write and also allows
+    # offline inspection of what was ingested.  The file is written before any
+    # database activity so the rest of the function may still raise if the
+    # data fails to insert.
+    out_path = Path(out_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+    out_file = out_path / f"{p.stem}.processed.csv"
+    with open(out_file, "w", encoding="utf-8", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=REQUIRED_COLUMNS + ["source_system"])
+        writer.writeheader()
+        for r in rows:
+            out_row = {k: r.get(k, None) for k in REQUIRED_COLUMNS + ["source_system"]}
+            writer.writerow(out_row)
+    LOG.info("Wrote processed file to %s", out_file)
+
     if dry_run:
-        out_path = Path(out_dir)
-        out_path.mkdir(parents=True, exist_ok=True)
-        out_file = out_path / f"{p.stem}.processed.csv"
-        # write rows using csv module to avoid pandas dependency
-        with open(out_file, "w", encoding="utf-8", newline="") as fh:
-            writer = csv.DictWriter(fh, fieldnames=REQUIRED_COLUMNS + ["source_system"])
-            writer.writeheader()
-            for r in rows:
-                # ensure we only write required columns
-                out_row = {k: r.get(k, None) for k in REQUIRED_COLUMNS + ["source_system"]}
-                writer.writerow(out_row)
-        LOG.info("Dry-run: wrote processed file to %s", out_file)
+        LOG.info("Dry-run: skipping database inserts")
         return {"file_name": p.name, "total_rows": total_rows, "inserted_count": 0, "run_id": run_id}
 
     # Prepare param dicts for batch execution

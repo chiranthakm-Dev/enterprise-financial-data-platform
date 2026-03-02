@@ -66,3 +66,26 @@ def test_ingest_fallback_no_creds(tmp_path, monkeypatch):
     assert metrics["total_rows"] == 1
     assert metrics["inserted_count"] == 0
     assert (outdir / "data.processed.csv").exists()
+
+
+def test_ingest_non_dry_run_also_writes(tmp_path, monkeypatch):
+    # with credentials present the function should still write the processed
+    # CSV even when dry_run=False. We don't actually connect to a database in
+    # unit tests, so we simply verify the file creation and that no exception
+    # is raised.
+    monkeypatch.setenv("SNOWFLAKE_ACCOUNT", "acct")
+    monkeypatch.setenv("SNOWFLAKE_USER", "user")
+    monkeypatch.setenv("SNOWFLAKE_PASSWORD", "pass")
+    file = tmp_path / "data2.csv"
+    headers = ["transaction_id", "transaction_date", "account_id", "amount", "transaction_type"]
+    create_csv(file, headers, [{"transaction_id": "1", "transaction_date": "2026-02-01", "account_id": "A", "amount": "10", "transaction_type": "debit"}])
+    outdir = tmp_path / "out3"
+    # avoid any actual Snowflake calls during this unit test; the ingest module
+    # imported these helpers at import time so we patch the names there.
+    import src.ingest.ingest as ingest_mod
+    monkeypatch.setattr(ingest_mod, "execute_many", lambda q, params: None)
+    monkeypatch.setattr(ingest_mod, "execute_query", lambda q, params=None: [(0,)])
+    metrics = ingest_file(str(file), source_system="bank", dry_run=False, out_dir=str(outdir))
+    assert metrics["total_rows"] == 1
+    # file should be created regardless of dry_run
+    assert (outdir / "data2.processed.csv").exists()
